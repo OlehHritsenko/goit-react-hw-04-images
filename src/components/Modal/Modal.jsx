@@ -8,18 +8,18 @@ const modalRoot = document.querySelector('#modal-root');
 
 const Modal = ({ onClose, largeImage, description }) => {
   useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.code === 'Escape') {
+        onClose();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  });
-
-  const handleKeyDown = e => {
-    if (e.code === 'Escape') {
-      onClose();
-    }
-  };
+  }, [onClose]);
 
   const handleClickBackdrop = e => {
     if (e.target === e.currentTarget) {
@@ -33,7 +33,7 @@ const Modal = ({ onClose, largeImage, description }) => {
         <button className={css.button} type="button" onClick={onClose}>
           <BsFillXCircleFill />
         </button>
-        <img src={largeImage} alt={description} width="920" height="auto" />
+        <img src={largeImage} alt={description} />
       </div>
     </div>,
     modalRoot
@@ -42,6 +42,8 @@ const Modal = ({ onClose, largeImage, description }) => {
 
 Modal.propTypes = {
   onClick: PropTypes.func,
+  largeImage: PropTypes.string,
+  description: PropTypes.string,
 };
 
 export default Modal;

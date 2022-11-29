@@ -12,36 +12,31 @@ import css from './App.module.css';
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [totalImages, setTotalImages] = useState(0);
+  const [totalHits, setTotalHits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [images, setImages] = useState([]);
   const [largeImage, setLargeImage] = useState('');
-  const [error, setError] = useState(null);
+  const [description, setDescription] = useState('');
   const PER_PAGE = 12;
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
       return;
     }
+
     setIsLoading(true);
 
     fetchImages(searchQuery, page)
-      .then(({ hits, totalHits }) => {
-        setImages(prevState => [...prevState, ...imagesArray]);
-        setTotalImages(Math.ceil(totalHits / PER_PAGE));
-        const imagesArray = hits.map(hit => ({
-          id: hit.id,
-          description: hit.tags,
-          smallImage: hit.webformatURL,
-          largeImage: hit.largeImageURL,
-        }));
+      .then(data => {
+        setImages(images => [...images, ...data.hits]);
+        setTotalHits(Math.ceil(data.totalHits / PER_PAGE));
       })
-      .catch(() => setError(error))
+      .catch(error => console.warn(error))
       .finally(() => {
         setIsLoading(false);
       });
-  }, [searchQuery, page, error]);
+  }, [page, searchQuery]);
 
   const getSearchRequest = query => {
     if (searchQuery !== query) {
@@ -53,12 +48,12 @@ const App = () => {
 
   const onNextFetch = () => {
     setPage(prevState => prevState + 1);
-    setIsLoading(true);
   };
 
-  const handleOpenModal = largeImage => {
-    setShowModal(true);
-    setLargeImage(largeImage);
+  const handleOpenModal = (url, alt) => {
+    setLargeImage(url);
+    setDescription(alt);
+    toggleModal();
   };
 
   const toggleModal = () => {
@@ -72,10 +67,14 @@ const App = () => {
       <Searchbar onSubmit={getSearchRequest} />
       {images && <ImageGallery images={images} openModal={handleOpenModal} />}
       {isLoading && <Loader />}
-      {isButtonVisible && page < totalImages && (
-        <Button onClick={onNextFetch} />
+      {isButtonVisible && page < totalHits && <Button onClick={onNextFetch} />}
+      {showModal && (
+        <Modal
+          largeImage={largeImage}
+          description={description}
+          onClose={toggleModal}
+        />
       )}
-      {showModal && <Modal onClose={toggleModal} largeImage={largeImage} />}
       <ToastContainer autoClose={3000} />
     </div>
   );
